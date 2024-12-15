@@ -9,9 +9,6 @@ std::vector<std::string> readLines(){
     while(!std::cin.eof()){
         std::string line;
         getline(std::cin, line);
-        if(line == ""){
-            break;
-        }
 
         vec.push_back(line);
     }
