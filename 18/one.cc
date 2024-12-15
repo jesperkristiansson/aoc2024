@@ -11,6 +11,8 @@
 #include <cctype>
 #include <cstring>
 
+#include "readInput.hpp"
+
 using namespace std;
 
 int main(){
