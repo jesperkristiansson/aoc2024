@@ -1,3 +1,4 @@
+CFLAGS = -O0 -Wall -Wextra -g -I../lib
 
 input=input
 
@@ -9,7 +10,7 @@ run: one two
 	echo "Part two: $$(./two < $(input))"
 
 one: one.cc
-	g++ -O3 -Wall -Wextra -g $< -o $@
+	g++ $(CFLAGS) $< -o $@
 
 two: two.cc
-	g++ -O3 -Wall -Wextra -g $< -o $@
+	g++ $(CFLAGS) $< -o $@
