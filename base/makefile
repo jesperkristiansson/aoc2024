@@ -5,7 +5,7 @@ CFLAGS = -O2 -W4 -EHsc -I../lib
 OUTPUT_OPTION = /Fe
 else
 COMPILER = g++
-CFLAGS = -O3 -Wall -Wextra -g -I../lib
+CFLAGS = -O3 -Wall -Wextra -g -std=c++2a -I../lib
 OUTPUT_OPTION = -o
 endif
 

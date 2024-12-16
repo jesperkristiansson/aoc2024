@@ -1,4 +1,4 @@
-CFLAGS = -O3 -Wall -Wextra -g -I../lib
+CFLAGS = -O3 -Wall -Wextra -g -std=c++2a -I../lib
 
 input=input
 
