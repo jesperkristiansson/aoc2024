@@ -1,2 +1,6 @@
 */one
 */two
+*.pdb
+*.ilk
+*.exe
+*.obj
