@@ -13,6 +13,10 @@ std::vector<std::string> readLines(){
         vec.push_back(line);
     }
 
+    while(vec.back() == ""){
+        vec.erase(vec.begin() + vec.size() - 1);
+    }
+
     return vec;
 }
 
