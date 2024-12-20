@@ -21,32 +21,38 @@ static Stone from_string(const string &s){
     return stoull(s);
 }
 
+map<pair<Stone, int>, long long> stoneAmountMap;
+
+long long getNumStones(Stone s, int blinks){
+    if(blinks == 0){
+        return 1;
+    }
+
+    long long &count = stoneAmountMap[make_pair(s, blinks)];
+    if(count != 0){     //value exists;
+        return count;
+    }
+
+    if(s == 0){
+        count = getNumStones(1, blinks-1);
+    } else if(string stoneString = to_string(s); stoneString.size() % 2 == 0){
+        size_t halfSize = stoneString.size()/2;
+        Stone left = from_string(stoneString.substr(0, halfSize));
+        Stone right = from_string(stoneString.substr(halfSize));
+        count = getNumStones(left, blinks-1) + getNumStones(right, blinks-1);
+    } else{
+        count = getNumStones(s*2024, blinks-1);
+    }
+
+    return count;
+}
+
 int main(){
     vector<Stone> stones = readInput_vec<Stone>();
 
-    int sumStones = 0;
+    long long sumStones = 0;
     for(Stone stone : stones){
-        vector<Stone> currentStones = {stone};
-        for(size_t i = 0; i < 75; i++){
-            cout << "i: " << i << endl;
-            size_t numStones = currentStones.size();    // we will add to the vector but only want to go through the original stones
-            for(size_t j = 0; j < numStones; j++){
-                Stone &s = currentStones[j];
-                //rules
-                if(s == 0){
-                    s = 1;
-                } else if(string stoneString = to_string(s); stoneString.size() % 2 == 0){
-                    size_t halfSize = stoneString.size()/2;
-                    Stone left = from_string(stoneString.substr(0, halfSize));
-                    Stone right = from_string(stoneString.substr(halfSize));
-                    s = left;
-                    currentStones.push_back(right);
-                } else{
-                    s *= 2024;
-                }
-            }
-        }
-        sumStones += currentStones.size();
+        sumStones += getNumStones(stone, 75);
     }
 
     cout << sumStones << endl;
