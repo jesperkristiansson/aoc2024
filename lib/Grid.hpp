@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <iostream>
 
 struct Direction{
     Direction() = default;
@@ -41,6 +42,19 @@ struct Point{
 
     int x{0}, y{0};
 };
+
+
+std::ostream &operator<<(std::ostream &os, Point &p){
+    return os << p.x << ',' << p.y;
+}
+std::istream &operator>>(std::istream &is, Point &p){
+    is >> p.x;
+    if(is.peek()){
+        is.ignore();
+    }
+    is >> p.y;
+    return is;
+}
 
 template <typename T>
 struct Grid{
