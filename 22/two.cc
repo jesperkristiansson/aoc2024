@@ -7,6 +7,7 @@
 #include <set>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <limits>
 #include <utility>
 #include <cctype>
@@ -27,7 +28,8 @@ struct PatternHasher {
         return h;
     }
 };
-using PatternMap = unordered_map<Pattern, uint8_t, PatternHasher>;
+using PatternMap = unordered_map<Pattern, int, PatternHasher>;
+using PatternSet = unordered_set<Pattern, PatternHasher>;
 
 vector<uint8_t> getPriceList(long long secret, int n){
     vector<uint8_t> priceList;
@@ -55,8 +57,8 @@ vector<int8_t> getPriceDiff(const vector<uint8_t> &prices){
     return priceDiff;
 }
 
-PatternMap getPatternMap(const vector<int8_t> &priceDiff, const vector<uint8_t> &priceList){
-    PatternMap patternMap;
+void addToPatternMap(const vector<int8_t> &priceDiff, const vector<uint8_t> &priceList, PatternMap &patternMap){
+    PatternSet addedPatterns;
 
     for(size_t i = 3; i < priceDiff.size(); i++){
         Pattern pattern;
@@ -65,10 +67,11 @@ PatternMap getPatternMap(const vector<int8_t> &priceDiff, const vector<uint8_t> 
         pattern[2] = priceDiff[i-1];
         pattern[3] = priceDiff[i];
 
-        patternMap.emplace(pattern, priceList[i]);
+        if(!addedPatterns.contains(pattern)){
+            patternMap[pattern] += priceList[i];
+            addedPatterns.insert(pattern);
+        }
     }
-
-    return patternMap;
 }
 
 long long score(const vector<long long> &secrets){
@@ -82,39 +85,15 @@ long long score(const vector<long long> &secrets){
         priceDiffs.push_back(getPriceDiff(priceLists.back()));
     }
 
-    vector<PatternMap> patternMaps;
+    PatternMap patternMap;
     for(size_t i = 0; i < priceDiffs.size(); i++){
-        patternMaps.push_back(getPatternMap(priceDiffs[i], priceLists[i]));
+        addToPatternMap(priceDiffs[i], priceLists[i], patternMap);
     }
 
-    int max = 0;
-    Pattern pattern;
-    for(int8_t i1 = -9; i1 <= 9; i1++){
-        pattern[0] = i1;
-        for(int8_t i2 = -9; i2 <= 9; i2++){
-            pattern[1] = i2;
-            for(int8_t i3 = -9; i3 <= 9; i3++){
-                pattern[2] = i3;
-                for(int8_t i4 = -9; i4 <= 9; i4++){
-                    pattern[3] = i4;
+    auto isLess = [](const auto &e1, const auto &e2){return e1.second < e2.second;};
+    auto max_it = max_element(patternMap.begin(), patternMap.end(), isLess);
 
-                    int sum = 0;
-                    for(const PatternMap &patternMap : patternMaps){
-                        auto it = patternMap.find(pattern);
-                        if(it != patternMap.end()){
-                            sum += it->second;
-                        }
-                    }
-
-                    if(sum > max){
-                        max = sum;
-                    }
-                }
-            }
-        }
-    }
-
-    return max;
+    return max_it->second;
 }
 
 int main(){
