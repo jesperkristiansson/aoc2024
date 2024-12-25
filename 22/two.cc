@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <unordered_map>
 #include <limits>
 #include <utility>
 #include <cctype>
@@ -16,6 +17,17 @@
 using namespace std;
 
 using Pattern = array<int8_t, 4>;
+struct PatternHasher {
+    std::size_t operator()(const Pattern& a) const {
+        std::size_t h = 0;
+
+        for (auto e : a) {
+            h ^= std::hash<int8_t>{}(e)  + 0x9e3779b9 + (h << 6) + (h >> 2);
+        }
+        return h;
+    }
+};
+using PatternMap = unordered_map<Pattern, uint8_t, PatternHasher>;
 
 vector<uint8_t> getPriceList(long long secret, int n){
     vector<uint8_t> priceList;
@@ -43,8 +55,8 @@ vector<int8_t> getPriceDiff(const vector<uint8_t> &prices){
     return priceDiff;
 }
 
-map<Pattern, uint8_t> getPatternMap(const vector<int8_t> &priceDiff, const vector<uint8_t> &priceList){
-    map<Pattern, uint8_t> patternMap;
+PatternMap getPatternMap(const vector<int8_t> &priceDiff, const vector<uint8_t> &priceList){
+    PatternMap patternMap;
 
     for(size_t i = 3; i < priceDiff.size(); i++){
         Pattern pattern;
@@ -70,7 +82,7 @@ long long score(const vector<long long> &secrets){
         priceDiffs.push_back(getPriceDiff(priceLists.back()));
     }
 
-    vector<map<Pattern, uint8_t>> patternMaps;
+    vector<PatternMap> patternMaps;
     for(size_t i = 0; i < priceDiffs.size(); i++){
         patternMaps.push_back(getPatternMap(priceDiffs[i], priceLists[i]));
     }
@@ -87,7 +99,7 @@ long long score(const vector<long long> &secrets){
                     pattern[3] = i4;
 
                     int sum = 0;
-                    for(const map<Pattern, uint8_t> &patternMap : patternMaps){
+                    for(const PatternMap &patternMap : patternMaps){
                         auto it = patternMap.find(pattern);
                         if(it != patternMap.end()){
                             sum += it->second;
