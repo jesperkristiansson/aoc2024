@@ -28,8 +28,11 @@ struct PatternHasher {
         return h;
     }
 };
-using PatternMap = unordered_map<Pattern, int, PatternHasher>;
-using PatternSet = unordered_set<Pattern, PatternHasher>;
+struct PatternValue{
+    int value{0};
+    int id{-1};
+};
+using PatternMap = unordered_map<Pattern, PatternValue, PatternHasher>;
 
 vector<uint8_t> getPriceList(long long secret, int n){
     vector<uint8_t> priceList;
@@ -57,9 +60,7 @@ vector<int8_t> getPriceDiff(const vector<uint8_t> &prices){
     return priceDiff;
 }
 
-void addToPatternMap(const vector<int8_t> &priceDiff, const vector<uint8_t> &priceList, PatternMap &patternMap){
-    PatternSet addedPatterns;
-
+void addToPatternMap(const vector<int8_t> &priceDiff, const vector<uint8_t> &priceList, PatternMap &patternMap, int id){
     for(size_t i = 3; i < priceDiff.size(); i++){
         Pattern pattern;
         pattern[0] = priceDiff[i-3];
@@ -67,9 +68,10 @@ void addToPatternMap(const vector<int8_t> &priceDiff, const vector<uint8_t> &pri
         pattern[2] = priceDiff[i-1];
         pattern[3] = priceDiff[i];
 
-        if(!addedPatterns.contains(pattern)){
-            patternMap[pattern] += priceList[i];
-            addedPatterns.insert(pattern);
+        PatternValue &v = patternMap[pattern];
+        if(v.id != id){
+            v.value += priceList[i];
+            v.id = id;
         }
     }
 }
@@ -87,13 +89,13 @@ long long score(const vector<long long> &secrets){
 
     PatternMap patternMap;
     for(size_t i = 0; i < priceDiffs.size(); i++){
-        addToPatternMap(priceDiffs[i], priceLists[i], patternMap);
+        addToPatternMap(priceDiffs[i], priceLists[i], patternMap, i);
     }
 
-    auto isLess = [](const auto &e1, const auto &e2){return e1.second < e2.second;};
+    auto isLess = [](const auto &e1, const auto &e2){return e1.second.value < e2.second.value;};
     auto max_it = max_element(patternMap.begin(), patternMap.end(), isLess);
 
-    return max_it->second;
+    return max_it->second.value;
 }
 
 int main(){
