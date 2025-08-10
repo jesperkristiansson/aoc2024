@@ -9,6 +9,13 @@ struct Direction{
 
     auto operator<=>(const Direction &other) const = default;
 
+    Direction operator*(int mult) const{
+        return Direction(dx*mult, dy*mult);
+    }
+    Direction operator+(Direction other) const{
+        return Direction(dx+other.dx, dy+other.dy);
+    }
+
     Direction rotateRight() const{
         return Direction(-dy, dx);
     }
@@ -94,3 +101,14 @@ struct Grid{
     std::vector<std::vector<T>> mat{};
     int xMax{0}, yMax{0};
 };
+
+template<typename T>
+std::ostream &operator<<(std::ostream &os, const Grid<T> &g){
+    for(auto row : g.mat){
+        for(auto val : row){
+            os << val;
+        }
+        os << '\n';
+    }
+    return os;
+}
