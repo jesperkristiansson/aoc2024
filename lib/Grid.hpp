@@ -17,6 +17,11 @@ struct Direction{
     int dx{0}, dy{0};
 };
 
+
+std::ostream &operator<<(std::ostream &os, const Direction &d){
+    return os << d.dx << ',' << d.dy;
+}
+
 const inline Direction NORTH(0, -1);
 const inline Direction SOUTH(0, 1);
 const inline Direction EAST(1, 0);
@@ -37,14 +42,14 @@ struct Point{
         return *this;
     }
     Direction operator-(const Point &other){
-        return Direction(other.x - this->x, other.y - this->y);
+        return Direction(this->x - other.x, this->y - other.y);
     }
 
     int x{0}, y{0};
 };
 
 
-std::ostream &operator<<(std::ostream &os, Point &p){
+std::ostream &operator<<(std::ostream &os, const Point &p){
     return os << p.x << ',' << p.y;
 }
 std::istream &operator>>(std::istream &is, Point &p){
@@ -60,6 +65,19 @@ template <typename T>
 struct Grid{
     Grid() = default;
     Grid(int xMax, int yMax) : mat(yMax, std::vector<T>(xMax)), xMax{xMax}, yMax{yMax}{}
+    template<typename TRange> requires std::same_as<typename TRange::value_type::value_type, T>
+    Grid(const TRange& rangeRange){
+        yMax = rangeRange.size();
+        mat.reserve(yMax);
+        for(const auto &r : rangeRange){
+            xMax = r.size();
+            mat.emplace_back();
+            mat.reserve(xMax);
+            for(T e : r){
+                mat.back().push_back(e);
+            }
+        }
+    }
 
     T &at(const Point &p){
         return mat[p.y][p.x];
@@ -67,7 +85,7 @@ struct Grid{
     const T &at(const Point &p) const{
         return mat[p.y][p.x];
     }
-    bool contains(const Point &p){
+    bool contains(const Point &p) const{
         return p.x >= 0 && p.x < xMax && p.y >= 0 && p.y < yMax;
     }
 
