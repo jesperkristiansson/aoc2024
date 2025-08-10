@@ -7,6 +7,8 @@ struct Direction{
     Direction() = default;
     Direction(int dx, int dy) : dx{dx}, dy{dy} {}
 
+    auto operator<=>(const Direction &other) const = default;
+
     Direction rotateRight() const{
         return Direction(-dy, dx);
     }
