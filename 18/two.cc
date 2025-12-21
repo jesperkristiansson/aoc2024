@@ -17,19 +17,22 @@
 
 using namespace std;
 
-void zero(Grid<char> &map){
-    for(int y = 0; y < map.yMax; y++){
-        for(int x = 0; x < map.xMax; x++){
-            map.mat[y][x] = 0;
-        }
+void setMode(Grid<char> &map, const vector<Point> &points, int from, int to, char mode){
+    for(int i = from; i <= to; i++){
+        map.at(points[i]) = mode;
     }
 }
 
-void fallDown(Grid<char> &map, const vector<Point> &points, int toFall){
-    for(int i = 0; i < toFall; i++){
-        map.at(points[i]) = '#';
-    }
+
+void fallDown(Grid<char> &map, const vector<Point> &points, int from, int to){
+    setMode(map, points, from, to, '#');
 }
+
+// opposite of fallDown()
+void riseUp(Grid<char> &map, const vector<Point> &points, int from, int to){
+    setMode(map, points, from, to, '.');
+}
+
 
 struct Node{
     Point pos;
@@ -46,6 +49,8 @@ int findPath(Grid<char> &maze, Point start, Point end){
     priority_queue<Node> q;
     q.emplace(start, 0);
 
+    Grid<unsigned char> visited(maze.xMax, maze.yMax);
+
     while(!q.empty()){
         Node n = q.top();
         q.pop();
@@ -54,11 +59,11 @@ int findPath(Grid<char> &maze, Point start, Point end){
             return n.cost;
         }
 
-        if(maze.at(n.pos) == '-'){
+        if(visited.at(n.pos)){
             continue;
         }
 
-        maze.at(n.pos) = '-';
+        visited.at(n.pos) = true;
 
         for(Direction dir : {NORTH, EAST, SOUTH, WEST}){
             Point newP = n.pos + dir;
@@ -95,16 +100,21 @@ int main(){
     Point start(0,0);
     Point end(maxX, maxY);
 
+    Grid<char> map(maxX+1, maxY+1);
+
     int low = 0;
     int high = points.size()-1;
     bool pathExists{};
     int mid{};
     while(low <= high){
-        mid = (high + low)/2;
+        int newMid = (high + low)/2;
+        if (newMid > mid){
+            fallDown(map, points, mid, newMid);
+        } else{
+            riseUp(map, points, newMid+1, mid);
+        }
+        mid = newMid;
 
-        Grid<char> map(maxX+1, maxY+1);
-        //zero(map);
-        fallDown(map, points, mid+1);
         int cost = findPath(map, start, end);
         pathExists = cost != -1;
         if(pathExists){
