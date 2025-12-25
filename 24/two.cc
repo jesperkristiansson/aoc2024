@@ -10,6 +10,7 @@
 #include <utility>
 #include <cctype>
 #include <cstring>
+#include <fstream>
 
 #include "readInput.hpp"
 
@@ -129,12 +130,45 @@ WireState performOperation(Operator op, WireState i1, WireState i2){
     }
 }
 
+void writeDotFile(const vector<Gate> &gates, const string &filename){
+    ofstream of(filename);
+    of << "digraph G {" << '\n';
+    for(const Gate &gate : gates){
+        string operatorStr;
+        switch(gate.op){
+            case AND:
+                operatorStr = "AND";
+                break;
+            case OR:
+                operatorStr = "OR";
+                break;
+            case XOR:
+                operatorStr = "XOR";
+                break;
+            default:
+                operatorStr = "UNKNOWN";
+                break;
+        }
+
+        static int gateNum = 0;
+        string gateName = string("gate") + to_string(gateNum);
+
+        of << gateName << " [shape=square]" << '\n';
+        of << gate.input1 << " -> " << gateName << '\n';
+        of << gate.input2 << " -> " << gateName << '\n';
+        of << gateName << " -> " << gate.output << " [label=\"" << operatorStr << "\"]" << '\n';
+
+        gateNum++;
+    }
+    of << "}" << endl;
+}
+
 bool updateGate(WireStates &ws, const Gate &g){
-    WireState i1 = getState(ws, g.input1);
-    WireState i2 = getState(ws, g.input2);
+    WireState i1 = getState(ws, g.input1, OFF);
+    WireState i2 = getState(ws, g.input2, OFF);
 
     WireState newOutput = performOperation(g.op, i1, i2);
-    WireState out = getState(ws, g.output);
+    WireState out = getState(ws, g.output, OFF);
     if(newOutput == out){  //no change
         return false;
     }
@@ -147,13 +181,7 @@ uint8_t toDigit(char c){
     return c - '0';
 }
 
-constexpr int numOut = 46;
-constexpr int numIn = 45;
-
-int main(){
-    vector<string> lines = readLines();
-    State state = getStartingState(lines);
-
+void updateGates(State &state){
     bool changed = true;
     while(changed){
         changed = false;
@@ -161,11 +189,44 @@ int main(){
             changed = changed || updateGate(state.wires, g);
         }
     }
+}
 
-    for(int i = numOut - 1; i >= 0; i--){
-
-        WireState s = getState(state.wires, string("z") + (i < 10 ? "0" : "") + to_string(i), OFF);
-        cout << s - 1;
+string getBinary(const State &state, char prefix, size_t bits){
+    string bin(bits, '\0');
+    for(size_t i = 0; i < bits; i++){
+        WireState s = getState(state.wires, string{prefix} + (i < 10 ? "0" : "") + to_string(i), OFF);
+        bin[bits - i - 1] = '0' + s - 1;
     }
-    cout << endl;
+    return bin;
+}
+
+int main(int argc, const char **argv){
+    vector<string> lines = readLines();
+    State state = getStartingState(lines);
+    auto numIn = state.wires.size()/2;
+    auto numOut = numIn+1;
+
+    writeDotFile(state.gates, "gates.dot");
+
+    for(int j = numIn - 1; j >= 0; j--){
+        state.wires.clear();
+        string gateNameX = string("x") + (j < 10 ? "0" : "") + to_string(j);
+        state.wires[gateNameX] = ON;
+        updateGates(state);
+
+        for(int i = numOut - 1; i >= 0; i--){
+            int lastDigit = i%10;
+            char ch = '0' + lastDigit;
+            cout << ch;
+        }
+        cout << endl;
+
+        string xBin = getBinary(state, 'x', numOut);
+        string yBin = getBinary(state, 'y', numOut);
+        string zBin = getBinary(state, 'z', numOut);
+        cout << xBin << endl;
+        cout << yBin << endl;
+        cout << zBin << endl;
+        cout << endl;
+    }
 }
